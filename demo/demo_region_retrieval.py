@@ -47,7 +47,8 @@ def main(args=None):
     output_root = './output'
 
     image_list = ['images/coco/000.jpg', 'images/coco/001.jpg', 'images/coco/002.jpg', 'images/coco/003.jpg']
-    text = ['pizza on the plate']
+    # text = ['pizza on the plate']
+    text = ['human on the bed']
 
     model = BaseModel(opt, build_model(opt)).from_pretrained(pretrained_pth).eval().cuda()
     model.model.sem_seg_head.predictor.lang_encoder.get_text_embeddings(["background", "background"], is_eval=False)

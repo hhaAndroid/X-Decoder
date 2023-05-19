@@ -48,9 +48,15 @@ def main(args=None):
     # META DATA
     pretrained_pth = os.path.join(opt['WEIGHT'])
     output_root = './output'
-    image_pth = 'images/fruit.jpg'
+    # image_pth = 'images/fruit.jpg'
+    image_pth = 'images/animals.png'
+    image_pth = 'images/owls.jpeg'
 
-    text = [['The larger watermelon.'], ['The front white flower.'], ['White tea pot.'], ['Flower bunch.'], ['white vase.'], ['The left peach.'], ['The brown knife.']]
+    # text = [['The larger watermelon.'], ['The front white flower.'], ['White tea pot.'], ['Flower bunch.'], ['white vase.'], ['The left peach.'], ['The brown knife.']]
+
+    # stuff_classes = ['zebra', 'antelope', 'giraffe', 'ostrich', 'sky', 'water', 'grass', 'sand', 'tree']
+    # text = [[stuff_classes[0]], [stuff_classes[1]], [stuff_classes[2]], [stuff_classes[3]], [stuff_classes[4]], [stuff_classes[5]], [stuff_classes[6]]]
+    text=[['owl']]
 
     model = BaseModel(opt, build_model(opt)).from_pretrained(pretrained_pth).eval().cuda()
     model.model.sem_seg_head.predictor.lang_encoder.get_text_embeddings(["background", "background"], is_eval=False)
@@ -77,7 +83,7 @@ def main(args=None):
 
         grd_mask = (outputs[0]['grounding_mask'] > 0).float().cpu().numpy()
         for idx, mask in enumerate(grd_mask):
-            demo = visual.draw_binary_mask(mask, color=random_color(rgb=True, maximum=1).astype(np.int).tolist(), text=text[idx], alpha=0.3)
+            demo = visual.draw_binary_mask(mask, color=random_color(rgb=True, maximum=1).astype(np.int).tolist(), text=text[idx], alpha=0.8) # 0.3
 
         output_folder = os.path.join(os.path.join(output_root))
         if not os.path.exists(output_folder):

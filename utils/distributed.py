@@ -4,7 +4,7 @@ import torch
 import pickle
 import subprocess
 
-from mpi4py import MPI
+# from mpi4py import MPI
 import torch.distributed as dist
 
 
@@ -18,18 +18,18 @@ def apply_distributed(opt):
         master_address = None
         master_port = None
 
-    master_address = MPI.COMM_WORLD.bcast(master_address, root=0)
-    master_port = MPI.COMM_WORLD.bcast(master_port, root=0)
-
-    if torch.distributed.is_available() and opt['world_size'] > 1:
-        init_method_url = 'tcp://{}:{}'.format(master_address, master_port)
-        backend = 'nccl'
-        world_size = opt['world_size']
-        rank = opt['rank']
-        torch.distributed.init_process_group(backend=backend,
-                                             init_method=init_method_url,
-                                             world_size=world_size,
-                                             rank=rank)
+    # master_address = MPI.COMM_WORLD.bcast(master_address, root=0)
+    # master_port = MPI.COMM_WORLD.bcast(master_port, root=0)
+    #
+    # if torch.distributed.is_available() and opt['world_size'] > 1:
+    #     init_method_url = 'tcp://{}:{}'.format(master_address, master_port)
+    #     backend = 'nccl'
+    #     world_size = opt['world_size']
+    #     rank = opt['rank']
+    #     torch.distributed.init_process_group(backend=backend,
+    #                                          init_method=init_method_url,
+    #                                          world_size=world_size,
+    #                                          rank=rank)
 
 def init_distributed(opt):
     opt['CUDA'] = opt.get('CUDA', True) and torch.cuda.is_available()

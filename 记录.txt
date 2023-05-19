@@ -1,0 +1,33 @@
+pt111cuda113
+
+export CUDA_HOME=/usr/local/cuda-11.3
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib:$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+python -m pip install 'git+https://github.com/MaureenZOU/detectron2-xyz.git'
+pip install git+https://github.com/cocodataset/panopticapi.git
+python -m pip install -r requirements.txt
+
+# sh install_cococapeval.sh
+
+# 开放集语义分割
+wget https://projects4jw.blob.core.windows.net/x-decoder/release/xdecoder_focalt_best_openseg.pt
+python demo/demo_semseg.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT xdecoder_focalt_best_openseg.pt
+
+# 如果图片中存在多个完全分开的斑马，只能检测到一个斑马,理论上可以检测多个的，可能效果不行。如果是固定名词短语，一般是用 demo_semseg
+python demo/demo_refseg.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT xdecoder_focalt_best_openseg.pt
+
+# 区域检索,给定多张图片和text，找出最符合条件的图片和相关物体，用 mask 分割出来
+python demo/demo_region_retrieval.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT xdecoder_focalt_best_openseg.pt
+python demo/demo_instseg.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT xdecoder_focalt_best_openseg.pt
+python demo/demo_panoseg.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT xdecoder_focalt_best_openseg.pt
+
+# 图片描述
+wget https://projects4jw.blob.core.windows.net/x-decoder/release/xdecoder_focalt_last_novg.pt
+# novg: without visual genome traing data
+
+python demo/demo_captioning.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT xdecoder_focalt_last_novg.pt
+
+# 给定图片和简单的 text，生成 text 指向的物体详细描述
+python demo/demo_refcap.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT xdecoder_focalt_last_novg.pt
+
