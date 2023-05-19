@@ -100,14 +100,14 @@ class LanguageEncoder(nn.Module):
         else:
             with torch.no_grad():
                 def extract_mean_emb(txts):
-                    tokens = self.tokenizer(
+                    tokens = self.tokenizer(  # CLIP tokenizer
                         txts, padding='max_length', truncation=True, max_length=self.max_token_num, return_tensors='pt'
-                    )
-                    clss_embedding = self.forward_language((tokens['input_ids'].cuda(), tokens['attention_mask'].cuda()), norm=norm)
-                    clss_embedding = clss_embedding.mean(dim=0)
+                    )  # 每个文本会生成 81 条 prompt
+                    clss_embedding = self.forward_language((tokens['input_ids'].cuda(), tokens['attention_mask'].cuda()), norm=norm)  # 计算文本嵌入
+                    clss_embedding = clss_embedding.mean(dim=0) # 求平均，变成 512 维
                     clss_embedding /= clss_embedding.norm()
                     return clss_embedding
-
+                # 用了 clip 的 集成模板
                 templates = get_prompt_templates()
                 clss_embeddings = []
                 if prompt:
@@ -117,11 +117,11 @@ class LanguageEncoder(nn.Module):
                 else:
                     clss_embeddings.append(extract_mean_emb(class_names))
 
-                if add_bgd:
+                if add_bgd: # false
                     txts = ["A background in coco."]
                     clss_embeddings.append(extract_mean_emb(txts))
 
-                text_emb = torch.stack(clss_embeddings, dim=0)
+                text_emb = torch.stack(clss_embeddings, dim=0)  # 10, 512, 10 表示 输入的类别数，包括背景
                 setattr(self, '{}_text_embeddings'.format(name), text_emb)
 
     def get_text_token_embeddings(self, txts, name='default', token=False, norm=False):
@@ -141,10 +141,10 @@ class LanguageEncoder(nn.Module):
 
     def forward_language(self, texts, norm=True):
         x = self.lang_encoder(*texts)
-        x = x['last_hidden_state']
+        x = x['last_hidden_state']  # 81,77,512
 
         if self.tokenizer_type == 'clip':
-            x = x[torch.arange(x.size(0)), texts[0].argmax(dim=-1)]
+            x = x[torch.arange(x.size(0)), texts[0].argmax(dim=-1)]  # 取最后的 token 对应的输出，81,512
         else:
             x = x[:, 0]
 

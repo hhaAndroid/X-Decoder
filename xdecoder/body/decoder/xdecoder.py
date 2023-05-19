@@ -213,7 +213,7 @@ class XDecoder(nn.Module):
 
         _, bs, _ = src[0].shape
 
-        # QxNxC
+        # QxNxC 都是 101x512
         query_embed = self.query_embed.weight.unsqueeze(1).repeat(1, bs, 1)
         output = self.query_feat.weight.unsqueeze(1).repeat(1, bs, 1)
 
@@ -244,9 +244,9 @@ class XDecoder(nn.Module):
             output = torch.cat((output, output[:-1]), dim=0)
             query_embed = torch.cat((query_embed, query_embed[:-1]), dim=0) # also pad language embdding to fix embedding
         else:
-            self_tgt_mask = self.self_attn_mask[:,:self.num_queries,:self.num_queries].repeat(output.shape[1]*self.num_heads, 1, 1)
+            self_tgt_mask = self.self_attn_mask[:,:self.num_queries,:self.num_queries].repeat(output.shape[1]*self.num_heads, 1, 1)  # 8,101,101
 
-        # prediction heads on learnable query features
+        # prediction heads on learnable query features， output 是学习好的 query feat，mask_features 是 FPN 最大输出尺度的特征
         results = self.forward_prediction_heads(output, mask_features, attn_mask_target_size=size_list[0], task=task)
         attn_mask = results["attn_mask"]
         predictions_class.append(results["outputs_class"])
@@ -305,7 +305,7 @@ class XDecoder(nn.Module):
             return out
         else:
             out = {
-                'pred_logits': predictions_class[-1],
+                'pred_logits': predictions_class[-1], # 只取最后的输出
                 'pred_masks': predictions_mask[-1],
                 'pred_boxes': predictions_bbox[-1],
                 'pred_captions': predictions_caption[-1],
@@ -425,11 +425,11 @@ class XDecoder(nn.Module):
 
         # recompute class token output.
         norm_decoder_output = decoder_output / (decoder_output.norm(dim=-1, keepdim=True) + 1e-7)
-        obj_token = norm_decoder_output[:,:self.num_queries-1]
+        obj_token = norm_decoder_output[:,:self.num_queries-1] # 101 个 query中，最后一个是 cls token，前面的100 个是 obj token
         cls_token = norm_decoder_output[:,self.num_queries-1:self.num_queries]
 
         sim = (cls_token @ obj_token.transpose(1,2)).softmax(-1)[:,0,:,None] # TODO include class token.
-        cls_token = (sim * decoder_output[:,:self.num_queries-1]).sum(dim=1, keepdim=True)
+        cls_token = (sim * decoder_output[:,:self.num_queries-1]).sum(dim=1, keepdim=True) # 1 1 512
 
         if (((self.training and task == 'seg') or (task == 'grounding_eval')) and self.task_switch['grounding']):
             decoder_output = torch.cat((decoder_output[:,:self.num_queries-1], cls_token, decoder_output[:,self.num_queries:2*self.num_queries-1]), dim=1)
@@ -439,11 +439,11 @@ class XDecoder(nn.Module):
         # compute class, mask and bbox.
         class_embed = decoder_output @ self.class_embed
         # HACK do not compute similarity if mask is not on
-        outputs_class = self.lang_encoder.compute_similarity(class_embed, fake=(((not self.task_switch['mask']) and self.training)))
+        outputs_class = self.lang_encoder.compute_similarity(class_embed, fake=(((not self.task_switch['mask']) and self.training))) # 1 101, 10
 
         if self.task_switch['mask']:
             mask_embed = self.mask_embed(decoder_output)
-            outputs_mask = torch.einsum("bqc,bchw->bqhw", mask_embed, mask_features)
+            outputs_mask = torch.einsum("bqc,bchw->bqhw", mask_embed, mask_features)  # 1,101,h,w
 
             # NOTE: prediction is of higher-resolution
             # [B, Q, H, W] -> [B, Q, H*W] -> [B, h, Q, H*W] -> [B*h, Q, HW]
@@ -473,7 +473,7 @@ class XDecoder(nn.Module):
             "outputs_class": outputs_class,
             "outputs_mask": outputs_mask,
             "outputs_bbox": outputs_bbox,
-            "attn_mask": attn_mask,
+            "attn_mask": attn_mask, # 干啥的？
             "outputs_caption": outputs_caption,
             "outputs_captionting": outputs_captionting,
         }

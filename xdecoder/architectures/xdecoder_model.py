@@ -80,19 +80,19 @@ class GeneralizedXdecoder(nn.Module):
             test_topk_per_image: int, instance segmentation parameter, keep topk instances per image
         """
         super().__init__()
-        self.backbone = backbone
+        self.backbone = backbone  # focalnet
         self.sem_seg_head = sem_seg_head
         self.criterion = criterion
         self.losses = losses
-        self.num_queries = num_queries
+        self.num_queries = num_queries # 101
         self.overlap_threshold = overlap_threshold
-        self.object_mask_threshold = object_mask_threshold
+        self.object_mask_threshold = object_mask_threshold # 0.8
         self.metadata = metadata
         if size_divisibility < 0:
             # use backbone size_divisibility if not set
             size_divisibility = self.backbone.size_divisibility
         self.size_divisibility = size_divisibility
-        self.sem_seg_postprocess_before_inference = sem_seg_postprocess_before_inference
+        self.sem_seg_postprocess_before_inference = sem_seg_postprocess_before_inference # true
         self.register_buffer("pixel_mean", torch.Tensor(pixel_mean).view(-1, 1, 1), False)
         self.register_buffer("pixel_std", torch.Tensor(pixel_std).view(-1, 1, 1), False)
 
@@ -105,13 +105,13 @@ class GeneralizedXdecoder(nn.Module):
         self.task_switch = task_switch
         self.phrase_prob = phrase_prob
 
-        self.test_topk_per_image = test_topk_per_image
-        self.train_class_names = get_class_names(train_dataset_name)
+        self.test_topk_per_image = test_topk_per_image # 100
+        self.train_class_names = get_class_names(train_dataset_name) # none
 
-        self.retrieval_emsemble = retrieval_emsemble
+        self.retrieval_emsemble = retrieval_emsemble # true
         # backbone itc loss
         if task_switch['retrieval'] and retrieval_emsemble:
-            self.backbone_proj = nn.Parameter(torch.empty(backbone_dim, dim_proj))
+            self.backbone_proj = nn.Parameter(torch.empty(backbone_dim, dim_proj))  # 768, 512
             trunc_normal_(self.backbone_proj, std=.02)
 
         if not self.semantic_on:
@@ -230,13 +230,13 @@ class GeneralizedXdecoder(nn.Module):
         img_bs = images.tensor.shape[0]
 
         targets = targets_grounding = queries_grounding = None
-        features = self.backbone(images.tensor)
+        features = self.backbone(images.tensor)  # 4 个 list 输出
         outputs = self.sem_seg_head(features, target_queries=queries_grounding)
 
-        mask_cls_results = outputs["pred_logits"]
-        mask_pred_results = outputs["pred_masks"]
+        mask_cls_results = outputs["pred_logits"]  # 1,101,10， 10 是类别数
+        mask_pred_results = outputs["pred_masks"] # 1,101,128,216
         box_pred_results = outputs["pred_boxes"] if self.task_switch['bbox'] else [None for i in range(len(mask_pred_results))]
-        caption_pred_results = outputs["pred_captions"] if self.task_switch['caption'] else [None for i in range(len(mask_pred_results))]
+        caption_pred_results = outputs["pred_captions"] if self.task_switch['caption'] else [None for i in range(len(mask_pred_results))] # 1,101,512
 
         # upsample masks
         mask_pred_results = F.interpolate(
@@ -262,15 +262,15 @@ class GeneralizedXdecoder(nn.Module):
             if self.sem_seg_postprocess_before_inference:
                 mask_pred_result = retry_if_cuda_oom(sem_seg_postprocess)(
                     mask_pred_result, image_size, height, width
-                )
-                mask_cls_result = mask_cls_result.to(mask_pred_result)
+                ) # 101，h,w, 101 是 总的 query 数目
+                mask_cls_result = mask_cls_result.to(mask_pred_result)  # 101,10， 10 是包括类别的 semantic 类别数目
 
             # semantic segmentation inference
-            if self.semantic_on:
+            if self.semantic_on:  # bgd 是背景的意思，keep_sem_bgd 是 False，表示不保留背景，
                 r = retry_if_cuda_oom(self.semantic_inference)(mask_cls_result, mask_pred_result, keep_sem_bgd)
                 if not self.sem_seg_postprocess_before_inference:
                     r = retry_if_cuda_oom(sem_seg_postprocess)(r, image_size, height, width)
-                processed_results[-1]["sem_seg"] = r
+                processed_results[-1]["sem_seg"] = r  # 9，h,w 输出最终的语义分割 mask，9 是用户输入的类别数目，不包括背景
 
             # panoptic segmentation inference
             if self.panoptic_on:

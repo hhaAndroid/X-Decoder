@@ -272,7 +272,7 @@ class TransformerEncoderPixelDecoder(BasePixelDecoder):
 
         ret['mask_on'] = cfg['MODEL']['DECODER']['MASK']
         return ret
-
+    # 使用 transformer 图片特征的多尺度特征融合,类似于 transformer 版本的 FPN
     def forward_features(self, features):
         multi_scale_features = []
         num_cur_levels = 0

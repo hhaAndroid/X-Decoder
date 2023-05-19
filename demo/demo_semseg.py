@@ -14,6 +14,7 @@ sys.path.insert(0, pth)
 
 from PIL import Image
 import numpy as np
+
 np.random.seed(1)
 
 import torch
@@ -27,7 +28,6 @@ from xdecoder.BaseModel import BaseModel
 from xdecoder import build_model
 from utils.visualizer import Visualizer
 from utils.distributed import init_distributed
-
 
 logger = logging.getLogger(__name__)
 
@@ -46,28 +46,30 @@ def main(args=None):
     # META DATA
     pretrained_pth = os.path.join(opt['WEIGHT'])
     output_root = './output'
-    image_pth = 'images/animals.png'
+    image_pth = '../images/animals.png'
 
     model = BaseModel(opt, build_model(opt)).from_pretrained(pretrained_pth).eval().cuda()
+    print(model)
 
     t = []
     t.append(transforms.Resize(512, interpolation=Image.BICUBIC))
     transform = transforms.Compose(t)
 
-    # stuff_classes = ['zebra','antelope','giraffe','ostrich','sky','water','grass','sand','tree']
-    stuff_classes = ['antelope','giraffe','ostrich','sky','water','grass','sand','tree']
+    # stuff_classes 一般用于表示非物体类别，例如天空、道路、草地，这里取名可能是瞎写的
+    stuff_classes = ['zebra', 'antelope', 'giraffe', 'ostrich', 'sky', 'water', 'grass', 'sand', 'tree']
     stuff_colors = [random_color(rgb=True, maximum=255).astype(np.int).tolist() for _ in range(len(stuff_classes))]
-    stuff_dataset_id_to_contiguous_id = {x:x for x in range(len(stuff_classes))}
+    stuff_dataset_id_to_contiguous_id = {x: x for x in range(len(stuff_classes))}
 
     MetadataCatalog.get("demo").set(
         stuff_colors=stuff_colors,
         stuff_classes=stuff_classes,
         stuff_dataset_id_to_contiguous_id=stuff_dataset_id_to_contiguous_id,
     )
+    # 基于类别重新设计 embedding
     model.model.sem_seg_head.predictor.lang_encoder.get_text_embeddings(stuff_classes + ["background"], is_eval=True)
     metadata = MetadataCatalog.get('demo')
     model.model.metadata = metadata
-    model.model.sem_seg_head.num_classes = len(stuff_classes)
+    model.model.sem_seg_head.num_classes = len(stuff_classes)  # 仅仅分这些类别
 
     with torch.no_grad():
         image_ori = Image.open(image_pth).convert("RGB")
@@ -76,14 +78,16 @@ def main(args=None):
         image = transform(image_ori)
         image = np.asarray(image)
         image_ori = np.asarray(image_ori)
-        images = torch.from_numpy(image.copy()).permute(2,0,1).cuda()
+        images = torch.from_numpy(image.copy()).permute(2, 0, 1).cuda()
 
         batch_inputs = [{'image': images, 'height': height, 'width': width}]
-        outputs = model.forward(batch_inputs)
+        # 会输出所有像素级别任务
+        outputs = model.forward(batch_inputs) #  [dict_keys(['sem_seg', 'panoptic_seg', 'instances', 'captions', 'masks'])]
         visual = Visualizer(image_ori, metadata=metadata)
 
         sem_seg = outputs[-1]['sem_seg'].max(0)[1]
-        demo = visual.draw_sem_seg(sem_seg.cpu(), alpha=0.5) # rgb Image
+        # 可视化只是可视化语义分割图
+        demo = visual.draw_sem_seg(sem_seg.cpu(), alpha=0.5)  # rgb Image
 
         if not os.path.exists(output_root):
             os.makedirs(output_root)

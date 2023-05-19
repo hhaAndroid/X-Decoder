@@ -21,7 +21,7 @@ class XdecoderHead(nn.Module):
         num_classes: int,
         pixel_decoder: nn.Module,
         loss_weight: float = 1.0,
-        ignore_value: int = -1,
+        ignore_value: int = -1,  # 255
         # extra parameters
         transformer_predictor: nn.Module,
         transformer_in_feature: str,
@@ -66,7 +66,7 @@ class XdecoderHead(nn.Module):
             transformer_predictor_in_channels = enc_cfg['CONVS_DIM']
         elif in_features_type == "pixel_embedding":
             transformer_predictor_in_channels = enc_cfg['MASK_DIM']
-        elif in_features_type == "multi_scale_pixel_decoder":
+        elif in_features_type == "multi_scale_pixel_decoder": # true
             transformer_predictor_in_channels = enc_cfg['CONVS_DIM']
         else:
             transformer_predictor_in_channels = input_shape[dec_cfg['TRANSFORMER_IN_FEATURE']].channels
@@ -93,9 +93,11 @@ class XdecoderHead(nn.Module):
         return self.layers(features, mask, target_queries, target_vlp, task, extra)
 
     def layers(self, features, mask=None, target_queries=None, target_vlp=None, task='seg', extra={}):
-        mask_features, transformer_encoder_features, multi_scale_features = self.pixel_decoder.forward_features(features)
-        
-        if self.transformer_in_feature == "multi_scale_pixel_decoder":
+        mask_features, transformer_encoder_features, multi_scale_features = self.pixel_decoder.forward_features(features) # 图片特征多尺度融合， transformer 版本的 FPN
+        # mask_features 是最大尺度特征图然后进行  mask 特征
+        # transformer_encoder_features 是中间的对应的最大特征图 transformer encoder 的输出
+        # multi_scale_features 融合后的 3 个尺度特征图
+        if self.transformer_in_feature == "multi_scale_pixel_decoder":  # true
             predictions = self.predictor(multi_scale_features, mask_features, mask, target_queries, target_vlp, task, extra)
         else:
             if self.transformer_in_feature == "transformer_encoder":
