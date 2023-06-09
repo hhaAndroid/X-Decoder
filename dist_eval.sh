@@ -17,6 +17,5 @@ python -m torch.distributed.launch \
     --master_port=$PORT \
     $(dirname "$0")/eval.py \
     evaluate --conf_files $CFG \
-    --overrides WEIGHT $W \
-    --launcher pytorch
+    --overrides WEIGHT $W
 
