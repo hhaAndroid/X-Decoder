@@ -589,7 +589,7 @@ class GeneralizedXdecoder(nn.Module):
     def instance_inference(self, mask_cls, mask_pred, box_pred):
         # mask_pred is already processed to have the same shape as original input
         image_size = mask_pred.shape[-2:]
-        print(mask_pred.sum(),mask_cls.sum())
+
 
         # [Q, K]
         scores = F.softmax(mask_cls, dim=-1)[:, :-1]
@@ -632,7 +632,6 @@ class GeneralizedXdecoder(nn.Module):
         mask_scores_per_image = (mask_pred.sigmoid().flatten(1) * result.pred_masks.flatten(1)).sum(1) / (result.pred_masks.flatten(1).sum(1) + 1e-6)
         result.scores = scores_per_image * mask_scores_per_image
         result.pred_classes = labels_per_image
-        print(result.scores.shape)
 
         return result
 
