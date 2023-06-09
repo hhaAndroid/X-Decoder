@@ -231,7 +231,7 @@ class GeneralizedXdecoder(nn.Module):
 
         targets = targets_grounding = queries_grounding = None
         features = self.backbone(images.tensor)  # 4 个 list 输出
-        outputs = self.sem_seg_head(features, target_queries=queries_grounding)
+        outputs = self.sem_seg_head(features, target_queries=queries_grounding)  # 核心
 
         mask_cls_results = outputs["pred_logits"]  # 1,101,10， 10 是类别数
         mask_pred_results = outputs["pred_masks"] # 1,101,128,216

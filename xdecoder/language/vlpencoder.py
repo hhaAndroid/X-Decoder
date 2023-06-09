@@ -70,7 +70,7 @@ class LanguageEncoder(nn.Module):
     def get_text_embeddings(self, class_names, name='default', is_eval=False, add_bgd=False, prompt=True, norm=True):
         if not is_eval:
             if prompt:
-                # randomly sample one template
+                # randomly sample one template 随机选择一个？ 那不会每次结果不一样吗？
                 arbitary_concepts = [
                     prompt_engineering(class_names[label].replace('-other','').replace('-merged','').replace('-stuff',''), topk=10000, suffix='.') \
                     for label in range(len(class_names))

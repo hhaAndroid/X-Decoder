@@ -57,6 +57,7 @@ def main(args=None):
 
     # stuff_classes 一般用于表示非物体类别，例如天空、道路、草地，这里取名可能是瞎写的
     stuff_classes = ['zebra', 'antelope', 'giraffe', 'ostrich', 'sky', 'water', 'grass', 'sand', 'tree']
+    # stuff_classes = ['zebra']
     stuff_colors = [random_color(rgb=True, maximum=255).astype(np.int).tolist() for _ in range(len(stuff_classes))]
     stuff_dataset_id_to_contiguous_id = {x: x for x in range(len(stuff_classes))}
 

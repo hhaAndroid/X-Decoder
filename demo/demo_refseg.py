@@ -48,18 +48,19 @@ def main(args=None):
     # META DATA
     pretrained_pth = os.path.join(opt['WEIGHT'])
     output_root = './output'
-    # image_pth = 'images/fruit.jpg'
-    image_pth = 'images/animals.png'
-    image_pth = 'images/owls.jpeg'
+    image_pth = '../images/fruit.jpg'
+    # image_pth = 'images/animals.png'
+    # image_pth = 'images/owls.jpeg'
 
-    # text = [['The larger watermelon.'], ['The front white flower.'], ['White tea pot.'], ['Flower bunch.'], ['white vase.'], ['The left peach.'], ['The brown knife.']]
+    text = [['The larger watermelon.'], ['The front white flower.'], ['White tea pot.'], ['Flower bunch.'], ['white vase.'], ['The left peach.'], ['The brown knife.']]
 
     # stuff_classes = ['zebra', 'antelope', 'giraffe', 'ostrich', 'sky', 'water', 'grass', 'sand', 'tree']
     # text = [[stuff_classes[0]], [stuff_classes[1]], [stuff_classes[2]], [stuff_classes[3]], [stuff_classes[4]], [stuff_classes[5]], [stuff_classes[6]]]
-    text=[['owl']]
+    # text=[['owl']]
 
     model = BaseModel(opt, build_model(opt)).from_pretrained(pretrained_pth).eval().cuda()
-    model.model.sem_seg_head.predictor.lang_encoder.get_text_embeddings(["background", "background"], is_eval=False)
+    # 这个应该只是为了防止程序不报错，没有其他意义，可以随便换
+    model.model.sem_seg_head.predictor.lang_encoder.get_text_embeddings(["not necessary"], is_eval=False)
 
     t = []
     t.append(transforms.Resize(512, interpolation=Image.BICUBIC))

@@ -49,10 +49,11 @@ def main(args=None):
     if 'novg' not in pretrained_pth:
         assert False, "Using the ckpt without visual genome training data will be much better."
     output_root = './output'
-    image_pth = 'images/mountain.jpeg'
+    image_pth = '../images/mountain.jpeg'
 
     model = BaseModel(opt, build_model(opt)).from_pretrained(pretrained_pth).eval().cuda()
-    model.model.sem_seg_head.predictor.lang_encoder.get_text_embeddings(["background"], is_eval=False)
+    # 这个应该只是为了防止程序不报错，没有其他意义，可以随便换
+    model.model.sem_seg_head.predictor.lang_encoder.get_text_embeddings(["not necessary"], is_eval=False)
 
     t = []
     t.append(transforms.Resize(224, interpolation=Image.BICUBIC))

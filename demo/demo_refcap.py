@@ -49,7 +49,7 @@ def main(args=None):
     if 'novg' not in pretrained_pth:
         assert False, "Using the ckpt without visual genome training data will be much better."
     output_root = './output'
-    image_pth = 'images/landscape.jpg'
+    image_pth = '../images/landscape.jpg'
     text = 'water'
 
     model = BaseModel(opt, build_model(opt)).from_pretrained(pretrained_pth).eval().cuda()
@@ -76,8 +76,8 @@ def main(args=None):
         outputs = model.model.evaluate_grounding(batch_inputs, None)
 
         grd_mask = (outputs[-1]['grounding_mask'] > 0).float()
-        grd_mask_ = (1 - F.interpolate(grd_mask[None,], (224, 224), mode='nearest')[0]).bool()
-        grd_mask_ = grd_mask_ * 0
+        grd_mask_ = (1 - F.interpolate(grd_mask[None], (224, 335), mode='nearest')[0]).bool()
+        # grd_mask_ = grd_mask_ * 0
 
         image_ori = Image.open(image_pth).convert("RGB")
         image = transform_ret(image_ori)

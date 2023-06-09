@@ -11,8 +11,8 @@ import time
 import logging
 import datetime
 
-from mpi4py import MPI
-import numpy as np
+# from mpi4py import MPI
+# import numpy as np
 
 import torch
 from detectron2.data import MetadataCatalog

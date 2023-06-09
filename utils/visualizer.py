@@ -246,9 +246,9 @@ def _create_text_labels(classes, scores, class_names, is_crowd=None):
             labels = [str(i) for i in classes]
     if scores is not None:
         if labels is None:
-            labels = ["{:.0f}%".format(s * 100) for s in scores]
+            labels = ["{:.1f}%".format(s * 100) for s in scores]
         else:
-            labels = ["{} {:.0f}%".format(l, s * 100) for l, s in zip(labels, scores)]
+            labels = ["{} {:.1f}%".format(l, s * 100) for l, s in zip(labels, scores)]
     if labels is not None and is_crowd is not None:
         labels = [l + ("|crowd" if crowd else "") for l, crowd in zip(labels, is_crowd)]
     return labels

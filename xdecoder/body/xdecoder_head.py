@@ -95,7 +95,7 @@ class XdecoderHead(nn.Module):
     def layers(self, features, mask=None, target_queries=None, target_vlp=None, task='seg', extra={}):
         mask_features, transformer_encoder_features, multi_scale_features = self.pixel_decoder.forward_features(features) # 图片特征多尺度融合， transformer 版本的 FPN
         # mask_features 是最大尺度特征图然后进行  mask 特征
-        # transformer_encoder_features 是中间的对应的最大特征图 transformer encoder 的输出
+        # transformer_encoder_features 是中间的对应的最大特征图 transformer encoder 的输出，不需要
         # multi_scale_features 融合后的 3 个尺度特征图
         if self.transformer_in_feature == "multi_scale_pixel_decoder":  # true
             predictions = self.predictor(multi_scale_features, mask_features, mask, target_queries, target_vlp, task, extra)

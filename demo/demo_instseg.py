@@ -47,7 +47,7 @@ def main(args=None):
     # META DATA
     pretrained_pth = os.path.join(opt['WEIGHT'])
     output_root = './output'
-    image_pth = 'images/owls.jpeg'
+    image_pth = '../images/owls.jpeg'
 
     model = BaseModel(opt, build_model(opt)).from_pretrained(pretrained_pth).eval().cuda()
 
@@ -56,7 +56,7 @@ def main(args=None):
     transform = transforms.Compose(t)
 
     thing_classes = ["owl"]
-    thing_colors = [random_color(rgb=True, maximum=255).astype(np.int).tolist() for _ in range(len(thing_classes))]
+    thing_colors = [random_color(rgb=True, maximum=255).astype(np.int32).tolist() for _ in range(len(thing_classes))]
     thing_dataset_id_to_contiguous_id = {x:x for x in range(len(thing_classes))}
 
     MetadataCatalog.get("demo").set(

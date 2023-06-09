@@ -31,3 +31,5 @@ python demo/demo_captioning.py evaluate --conf_files configs/xdecoder/svlp_focal
 # 给定图片和简单的 text，生成 text 指向的物体详细描述
 python demo/demo_refcap.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT xdecoder_focalt_last_novg.pt
 
+ evaluate --conf_files ../configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT ../xdecoder_focalt_best_openseg.pt
+
