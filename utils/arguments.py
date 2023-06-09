@@ -46,6 +46,7 @@ def load_opt_from_config_files(conf_files):
 
     return opt
 
+import os
 
 def load_opt_command(args):
     parser = argparse.ArgumentParser(description='Pretrain or fine-tune models for NLP tasks.')
@@ -54,8 +55,17 @@ def load_opt_command(args):
     parser.add_argument('--user_dir', help='Path to the user defined module for tasks (models, criteria), optimizers, and lr schedulers.')
     parser.add_argument('--config_overrides', nargs='*', help='Override parameters on config with a json style string, e.g. {"<PARAM_NAME_1>": <PARAM_VALUE_1>, "<PARAM_GROUP_2>.<PARAM_SUBGROUP_2>.<PARAM_2>": <PARAM_VALUE_2>}. A key with "." updates the object in the corresponding nested dict. Remember to escape " in command line.')
     parser.add_argument('--overrides', help='arguments that used to override the config file in cmdline', nargs=argparse.REMAINDER)
-
+    # dist param
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
+        default='none',
+        help='job launcher')
+    parser.add_argument('--local_rank', '--local-rank', type=int, default=0)
     cmdline_args = parser.parse_args() if not args else parser.parse_args(args)
+
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(cmdline_args.local_rank)
 
     opt = load_opt_from_config_files(cmdline_args.conf_files)
 

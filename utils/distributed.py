@@ -31,25 +31,41 @@ def apply_distributed(opt):
     #                                          world_size=world_size,
     #                                          rank=rank)
 
+from mmengine.dist import (collect_results, get_dist_info, get_rank, init_dist,
+                           is_distributed,get_world_size)
+
 def init_distributed(opt):
-    opt['CUDA'] = opt.get('CUDA', True) and torch.cuda.is_available()
-    if 'OMPI_COMM_WORLD_SIZE' not in os.environ:
-        # application was started without MPI
-        # default to single node with single process
-        opt['env_info'] = 'no MPI'
-        opt['world_size'] = 1
-        opt['local_size'] = 1
-        opt['rank'] = 0
-        opt['local_rank'] = 0
-        opt['master_address'] = '127.0.0.1'
-        opt['master_port'] = '8673'
+    if opt['launcher'] == 'none':
+        _distributed = False
     else:
-        # application was started with MPI
-        # get MPI parameters
-        opt['world_size'] = int(os.environ['OMPI_COMM_WORLD_SIZE'])
-        opt['local_size'] = int(os.environ['OMPI_COMM_WORLD_LOCAL_SIZE'])
-        opt['rank'] = int(os.environ['OMPI_COMM_WORLD_RANK'])
-        opt['local_rank'] = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
+        _distributed = True
+
+    if _distributed and not is_distributed():
+        init_dist(opt['launcher'])
+
+    opt['CUDA'] = True
+
+    opt['world_size'] = get_dist_info()[1]
+    opt['rank'] = get_rank()
+    opt['local_rank'] = get_rank()
+
+    # if 'OMPI_COMM_WORLD_SIZE' not in os.environ:
+    #     # application was started without MPI
+    #     # default to single node with single process
+    #     opt['env_info'] = 'no MPI'
+    #     opt['world_size'] = 1
+    #     opt['local_size'] = 1
+    #     opt['rank'] = 0
+    #     opt['local_rank'] = 0
+    #     opt['master_address'] = '127.0.0.1'
+    #     opt['master_port'] = '8673'
+    # else:
+    #     # application was started with MPI
+    #     # get MPI parameters
+    #     opt['world_size'] = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+    #     opt['local_size'] = int(os.environ['OMPI_COMM_WORLD_LOCAL_SIZE'])
+    #     opt['rank'] = int(os.environ['OMPI_COMM_WORLD_RANK'])
+    #     opt['local_rank'] = int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK'])
 
     # set up device
     if not opt['CUDA']:
@@ -59,29 +75,13 @@ def init_distributed(opt):
         torch.cuda.set_device(opt['local_rank'])
         opt['device'] = torch.device("cuda", opt['local_rank'])
 
-    apply_distributed(opt)
+    # apply_distributed(opt)
     return opt
 
+
 def is_main_process():
-    rank = 0
-    if 'OMPI_COMM_WORLD_SIZE' in os.environ:
-        rank = int(os.environ['OMPI_COMM_WORLD_RANK'])
-
+    rank = get_rank()
     return rank == 0
-
-def get_world_size():
-    if not dist.is_available():
-        return 1
-    if not dist.is_initialized():
-        return 1
-    return dist.get_world_size()
-
-def get_rank():
-    if not dist.is_available():
-        return 0
-    if not dist.is_initialized():
-        return 0
-    return dist.get_rank()
 
 
 def synchronize():
