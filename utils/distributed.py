@@ -35,13 +35,13 @@ from mmengine.dist import (collect_results, get_dist_info, get_rank, init_dist,
                            is_distributed,get_world_size)
 
 def init_distributed(opt):
-    if opt['launcher'] == 'none':
+    if 'LOCAL_RANK' not in os.environ:
         _distributed = False
     else:
         _distributed = True
 
     if _distributed and not is_distributed():
-        init_dist(opt['launcher'])
+        init_dist('pytorch')
 
     opt['CUDA'] = True
 
