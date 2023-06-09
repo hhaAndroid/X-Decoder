@@ -33,3 +33,20 @@ python demo/demo_refcap.py evaluate --conf_files configs/xdecoder/svlp_focalt_la
 
  evaluate --conf_files ../configs/xdecoder/svlp_focalt_lang.yaml  --overrides WEIGHT ../xdecoder_focalt_best_openseg.pt
 
+export DETECTRON2_DATASETS=/home/PJLAB/huanghaian/dataset/
+python eval.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml --overrides WEIGHT ../mmdetection/xdecoder_focalt_best_openseg.pt
+
+
+scl enable devtoolset-7 bash
+export CUDA_HOME=/usr/local/cuda-11.7
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib:$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+gcc nvcc
+
+pip install 'git+https://github.com/facebookresearch/detectron2.git'
+export DETECTRON2_DATASETS = /nvme/data/
+python eval.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml --overrides WEIGHT ../mmdetection/xdecoder_focalt_best_openseg.pt
+
+
+evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml --overrides WEIGHT xdecoder_focalt_best_openseg.pt

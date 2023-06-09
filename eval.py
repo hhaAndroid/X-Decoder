@@ -84,8 +84,8 @@ def main(args=None):
                 start_compute_time = time.perf_counter()
 
                 # forward
-                with torch.autocast(device_type='cuda', dtype=torch.float16):
-                    outputs = model(batch, mode=eval_type)
+                # with torch.autocast(device_type='cuda', dtype=torch.float16):
+                outputs = model(batch, mode=eval_type)
 
                 total_compute_time += time.perf_counter() - start_compute_time
                 start_eval_time = time.perf_counter()

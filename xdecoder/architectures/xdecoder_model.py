@@ -375,56 +375,56 @@ class GeneralizedXdecoder(nn.Module):
             processed_results[-1]["pred_class"] = outputs['pred_logits'][idx,-1]
         return processed_results
 
-    def evaluate_grounding_baseline(self, batched_inputs, mode):
-        images = [x["image"].to(self.device) for x in batched_inputs]
-        images = [(x - self.pixel_mean) / self.pixel_std for x in images]
-        images = ImageList.from_tensors(images, self.size_divisibility)
-        img_bs = images.tensor.shape[0]
-        
-        targets = targets_grounding = queries_grounding = None
-        features = self.backbone(images.tensor)
-        outputs = self.sem_seg_head(features, target_queries=queries_grounding)
-
-        mask_pred_results = outputs["pred_masks"]
-        caption_pred_results = outputs["pred_captions"] if self.task_switch['caption'] else [None for i in range(len(mask_pred_results))]
-
-        # upsample masks
-        mask_pred_results = F.interpolate(
-            mask_pred_results,
-            size=(images.tensor.shape[-2], images.tensor.shape[-1]),
-            mode="bicubic",
-            align_corners=False,
-            antialias=True
-        )
-
-        processed_results = []
-        for mask_pred_result, caption_pred_result, input_per_image, image_size in zip(
-            mask_pred_results, caption_pred_results, batched_inputs, images.image_sizes
-        ):
-            height = input_per_image.get("height", image_size[0])
-            width = input_per_image.get("width", image_size[1])
-            processed_results.append({})
-
-            mask_pred_result = retry_if_cuda_oom(sem_seg_postprocess)(
-                mask_pred_result, image_size, height, width
-            )[:-1]
-
-            texts_all = input_per_image['groundings']['texts']
-            grd_masks = []
-            for texts in texts_all:
-                if mode == 'grounding_refcoco':
-                    self.sem_seg_head.predictor.lang_encoder.get_text_embeddings(texts, name='grounding', prompt=False, is_eval=True)
-                elif mode == 'grounding_phrasecut':
-                    self.sem_seg_head.predictor.lang_encoder.get_text_embeddings(texts, name='grounding', prompt=True, is_eval=False)
-                t_emb = getattr(self.sem_seg_head.predictor.lang_encoder, "{}_text_embeddings".format('grounding')).t()
-                v_emb = caption_pred_result[:-1]
-                v_emb = v_emb / (v_emb.norm(dim=-1, keepdim=True) + 1e-7)
-                vt_sim = v_emb @ t_emb
-                max_id = vt_sim.max(0)[1][0]
-                grd_masks += [mask_pred_result[max_id]]
-            processed_results[-1]['grounding_mask'] = torch.stack(grd_masks)
-
-        return processed_results
+    # def evaluate_grounding_baseline(self, batched_inputs, mode):
+    #     images = [x["image"].to(self.device) for x in batched_inputs]
+    #     images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+    #     images = ImageList.from_tensors(images, self.size_divisibility)
+    #     img_bs = images.tensor.shape[0]
+    #
+    #     targets = targets_grounding = queries_grounding = None
+    #     features = self.backbone(images.tensor)
+    #     outputs = self.sem_seg_head(features, target_queries=queries_grounding)
+    #
+    #     mask_pred_results = outputs["pred_masks"]
+    #     caption_pred_results = outputs["pred_captions"] if self.task_switch['caption'] else [None for i in range(len(mask_pred_results))]
+    #
+    #     # upsample masks
+    #     mask_pred_results = F.interpolate(
+    #         mask_pred_results,
+    #         size=(images.tensor.shape[-2], images.tensor.shape[-1]),
+    #         mode="bicubic",
+    #         align_corners=False,
+    #         antialias=True
+    #     )
+    #
+    #     processed_results = []
+    #     for mask_pred_result, caption_pred_result, input_per_image, image_size in zip(
+    #         mask_pred_results, caption_pred_results, batched_inputs, images.image_sizes
+    #     ):
+    #         height = input_per_image.get("height", image_size[0])
+    #         width = input_per_image.get("width", image_size[1])
+    #         processed_results.append({})
+    #
+    #         mask_pred_result = retry_if_cuda_oom(sem_seg_postprocess)(
+    #             mask_pred_result, image_size, height, width
+    #         )[:-1]
+    #
+    #         texts_all = input_per_image['groundings']['texts']
+    #         grd_masks = []
+    #         for texts in texts_all:
+    #             if mode == 'grounding_refcoco':
+    #                 self.sem_seg_head.predictor.lang_encoder.get_text_embeddings(texts, name='grounding', prompt=False, is_eval=True)
+    #             elif mode == 'grounding_phrasecut':
+    #                 self.sem_seg_head.predictor.lang_encoder.get_text_embeddings(texts, name='grounding', prompt=True, is_eval=False)
+    #             t_emb = getattr(self.sem_seg_head.predictor.lang_encoder, "{}_text_embeddings".format('grounding')).t()
+    #             v_emb = caption_pred_result[:-1]
+    #             v_emb = v_emb / (v_emb.norm(dim=-1, keepdim=True) + 1e-7)
+    #             vt_sim = v_emb @ t_emb
+    #             max_id = vt_sim.max(0)[1][0]
+    #             grd_masks += [mask_pred_result[max_id]]
+    #         processed_results[-1]['grounding_mask'] = torch.stack(grd_masks)
+    #
+    #     return processed_results
 
     def evaluate_grounding(self, batched_inputs, mode):
         images = [x["image"].to(self.device) for x in batched_inputs]
@@ -589,6 +589,7 @@ class GeneralizedXdecoder(nn.Module):
     def instance_inference(self, mask_cls, mask_pred, box_pred):
         # mask_pred is already processed to have the same shape as original input
         image_size = mask_pred.shape[-2:]
+        print(mask_pred.sum(),mask_cls.sum())
 
         # [Q, K]
         scores = F.softmax(mask_cls, dim=-1)[:, :-1]
@@ -627,11 +628,11 @@ class GeneralizedXdecoder(nn.Module):
             result.pred_boxes = BitMasks(mask_pred > 0).get_bounding_boxes()
         else:
             result.pred_boxes = Boxes(torch.zeros(mask_pred.size(0), 4))
-
         # calculate average mask prob
         mask_scores_per_image = (mask_pred.sigmoid().flatten(1) * result.pred_masks.flatten(1)).sum(1) / (result.pred_masks.flatten(1).sum(1) + 1e-6)
         result.scores = scores_per_image * mask_scores_per_image
         result.pred_classes = labels_per_image
+        print(result.scores.shape)
 
         return result
 
