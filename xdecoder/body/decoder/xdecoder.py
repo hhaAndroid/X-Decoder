@@ -461,6 +461,7 @@ class XDecoder(nn.Module):
         # HACK do not compute similarity if mask is not on
         outputs_class = self.lang_encoder.compute_similarity(class_embed, fake=(
         ((not self.task_switch['mask']) and self.training)))  # 1 101, 10
+        print(class_embed.sum(), outputs_class.sum())
 
         if self.task_switch['mask']:
             mask_embed = self.mask_embed(decoder_output)

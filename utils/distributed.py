@@ -31,11 +31,13 @@ def apply_distributed(opt):
     #                                          world_size=world_size,
     #                                          rank=rank)
 
+
 from mmengine.dist import (collect_results, get_dist_info, get_rank, init_dist,
-                           is_distributed,get_world_size)
+                           is_distributed, get_world_size)
+
 
 def init_distributed(opt):
-    if 'LOCAL_RANK' not in os.environ:
+    if 'LOCAL_RANK' not in os.environ or int(os.environ['LOCAL_RANK']) == -1:
         _distributed = False
     else:
         _distributed = True
@@ -69,7 +71,8 @@ def init_distributed(opt):
 
     # set up device
     if not opt['CUDA']:
-        assert opt['world_size'] == 1, 'multi-GPU training without CUDA is not supported since we use NCCL as communication backend'
+        assert opt[
+                   'world_size'] == 1, 'multi-GPU training without CUDA is not supported since we use NCCL as communication backend'
         opt['device'] = torch.device("cpu")
     else:
         torch.cuda.set_device(opt['local_rank'])

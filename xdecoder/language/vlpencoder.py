@@ -122,6 +122,7 @@ class LanguageEncoder(nn.Module):
                     clss_embeddings.append(extract_mean_emb(txts))
 
                 text_emb = torch.stack(clss_embeddings, dim=0)  # 10, 512, 10 表示 输入的类别数，包括背景
+                print(text_emb.shape,text_emb.sum())
                 setattr(self, '{}_text_embeddings'.format(name), text_emb)
 
     def get_text_token_embeddings(self, txts, name='default', token=False, norm=False):

@@ -317,7 +317,8 @@ _PREDEFINED_SPLITS_ADE20K_PANOPTIC = {
         "ADEChallengeData2016/images/validation",
         "ADEChallengeData2016/ade20k_panoptic_val",
         "ADEChallengeData2016/ade20k_panoptic_val.json",
-        "ADEChallengeData2016/annotations_detectron2/validation",
+        # "ADEChallengeData2016/annotations_detectron2/validation",
+        "ADEChallengeData2016/annotations/validation",
         "ADEChallengeData2016/ade20k_instance_val.json",
     ),
 }

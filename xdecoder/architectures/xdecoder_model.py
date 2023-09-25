@@ -238,6 +238,15 @@ class GeneralizedXdecoder(nn.Module):
         box_pred_results = outputs["pred_boxes"] if self.task_switch['bbox'] else [None for i in range(len(mask_pred_results))]
         caption_pred_results = outputs["pred_captions"] if self.task_switch['caption'] else [None for i in range(len(mask_pred_results))] # 1,101,512
 
+        # import os
+        # save_dir = '/home/PJLAB/huanghaian/xd-1'
+        # import mmengine
+        # mmengine.mkdir_or_exist(save_dir)
+        # x = batched_inputs[0]['file_name']
+        # save_path = os.path.join(save_dir, x.split('/')[-1].split('.')[0] + '.pth')
+        # torch.save(dict(mask_pred_results=mask_pred_results, mask_cls_results=mask_cls_results), save_path)
+        # return []
+
         # upsample masks
         mask_pred_results = F.interpolate(
             mask_pred_results,

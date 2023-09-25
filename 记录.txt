@@ -46,7 +46,24 @@ gcc nvcc
 
 pip install 'git+https://github.com/facebookresearch/detectron2.git'
 export DETECTRON2_DATASETS = /nvme/data/
-python eval.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml --overrides WEIGHT ../mmdetection/xdecoder_focalt_best_openseg.pt
+python eval.py evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml --overrides WEIGHT xdecoder_focalt_best_openseg.pt
 
-
+export DETECTRON2_DATASETS=/home/PJLAB/huanghaian/dataset/
 evaluate --conf_files configs/xdecoder/svlp_focalt_lang.yaml --overrides WEIGHT xdecoder_focalt_best_openseg.pt
+
+office coco instance
+| hair drier    | 10.973 | toothbrush   | 18.340 |                |        |
+INFO:__main__:{'coco_2017_val/bbox/AP': 0.0, 'coco_2017_val/segm/AP': 39.7509072243379}
+
+office coco panoptic
+
+office coco seg
+INFO:__main__:{'coco_2017_val_panoptic/panoptic_seg/PQ': 51.16427830603285, '
+coco_2017_val_panoptic/panoptic_seg/SQ': 82.13441843988429, 'coco_2017_val_panoptic/panoptic_seg/RQ': 61.41112470525268}
+
+mmdet coco seg
+Epoch(test) [625/625]    aAcc: 72.5100  mIoU: 61.4700  mAcc: 72.5100  data_time: 0.0124  time: 0.1585
+
+mmdet coco panoptic
+
+

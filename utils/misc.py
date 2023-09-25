@@ -29,9 +29,11 @@ def hook_switcher(model, name):
     elif name in ['cityscapes_fine_panoptic_val', 'scannet_21_panoptic_val', 'bdd10k_40_panoptic_val']:
         mappings = {'SEMANTIC_ON': True, 'INSTANCE_ON': False, 'PANOPTIC_ON': True}
     elif name in ['coco_2017_val_panoptic_with_sem_seg', 'ade20k_panoptic_val', 'coco_2017_test-dev']:
-        mappings = {'SEMANTIC_ON': True, 'INSTANCE_ON': True, 'PANOPTIC_ON': True}
+        mappings = {'SEMANTIC_ON': False, 'INSTANCE_ON': False, 'PANOPTIC_ON': True}
     elif name in ['coco_2017_val']:
         mappings = {'SEMANTIC_ON': False, 'INSTANCE_ON': True, 'PANOPTIC_ON': True}
+    elif name in ['coco_2017_val_panoptic']:
+        mappings = {'SEMANTIC_ON': False, 'INSTANCE_ON': False, 'PANOPTIC_ON': True}
     else:
         if name not in ["vlp_val", "vlp_captioning_val", "vlp_val2017", "vlp_captioning_val2017", "imagenet_val", "refcocog_val_google", "phrasecut_val", "phrasecut_test", "refcocop_val_unc", "refcoco_val_unc", "refcocog_val_umd"]:
             assert False, "dataset switcher is not defined"

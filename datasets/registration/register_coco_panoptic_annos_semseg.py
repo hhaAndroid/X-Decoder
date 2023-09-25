@@ -21,9 +21,9 @@ _PREDEFINED_SPLITS_COCO_PANOPTIC = {
         "coco/panoptic_semseg_train2017",
     ),
     "coco_2017_val_panoptic": (
-        "coco/panoptic_val2017",
-        "coco/annotations/panoptic_val2017.json",
-        "coco/panoptic_semseg_val2017",
+        "/home/PJLAB/huanghaian/dataset/coco/panoptic_val2017",
+        "/home/PJLAB/huanghaian/dataset/coco/annotations/panoptic_val2017.json",
+        "/home/PJLAB/huanghaian/dataset/coco/panoptic_semseg_val2017",
     ),
 }
 

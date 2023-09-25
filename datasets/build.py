@@ -145,7 +145,15 @@ def get_detection_dataset_dicts(
         dataset_dicts = filter_images_with_only_crowd_annotations(dataset_dicts, dataset_names)
 
     assert len(dataset_dicts), "No valid data found in {}.".format(",".join(dataset_names))
-    return dataset_dicts
+    # return dataset_dicts
+
+    # val_dataset =[]
+    # for dataset in dataset_dicts:
+    #     if '000000149770' in dataset['file_name']:
+    #         val_dataset.append(dataset)
+    # return val_dataset
+    print(dataset_dicts[10])
+    return [dataset_dicts[10]]
 
 
 def _test_loader_from_config(cfg, dataset_name, mapper=None):
@@ -437,17 +445,17 @@ def build_evaluator(cfg, dataset_name, output_folder=None):
     evaluator_type = MetadataCatalog.get(dataset_name).evaluator_type
 
     # semantic segmentation
-    if evaluator_type in ["sem_seg", "ade20k_panoptic_seg"]:
-        evaluator_list.append(
-            SemSegEvaluator(
-                dataset_name,
-                distributed=True,
-                output_dir=output_folder,
-            )
-        )
-    # instance segmentation
-    if evaluator_type == "coco":
-        evaluator_list.append(COCOEvaluator(dataset_name, output_dir=output_folder))
+    # if evaluator_type in ["sem_seg", "ade20k_panoptic_seg"]:
+    #     evaluator_list.append(
+    #         SemSegEvaluator(
+    #             dataset_name,
+    #             distributed=True,
+    #             output_dir=output_folder,
+    #         )
+    #     )
+    # # instance segmentation
+    # if evaluator_type == "coco":
+    #     evaluator_list.append(COCOEvaluator(dataset_name, output_dir=output_folder))
     
     cfg_model_decoder_test = cfg["MODEL"]["DECODER"]["TEST"]
     # panoptic segmentation
@@ -494,8 +502,8 @@ def build_evaluator(cfg, dataset_name, output_folder=None):
             ), "CityscapesEvaluator currently do not work with multiple machines."
             evaluator_list.append(CityscapesInstanceEvaluator(dataset_name))
     # ADE20K
-    if evaluator_type == "ade20k_panoptic_seg" and cfg_model_decoder_test["INSTANCE_ON"]:
-        evaluator_list.append(InstanceSegEvaluator(dataset_name, output_dir=output_folder))
+    # if evaluator_type == "ade20k_panoptic_seg" and cfg_model_decoder_test["INSTANCE_ON"]:
+    #     evaluator_list.append(InstanceSegEvaluator(dataset_name, output_dir=output_folder))
     # SEGINW
     if evaluator_type == "seginw" and cfg_model_decoder_test["INSTANCE_ON"]:
         evaluator_list.append(InstanceSegEvaluator(dataset_name, output_dir=output_folder))
